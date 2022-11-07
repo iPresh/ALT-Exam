@@ -124,7 +124,7 @@
 
   - name: Copy pgsql script to remote server
     ansible.builtin.copy:
-        src: /home/vagrant/lavarel_application_using_ansible/Ansible-playbook/roles/php/templates/pgsql.sh
+        src: /home/ubuntu/ansible/pgsql.sh
         dest: /home/ubuntu/pgsql.sh
         owner: ubuntu
         group: ubuntu
@@ -154,7 +154,7 @@
  
   - name: Create new web.php in routes
     template: 
-        src=/vagrant/ansible/web.php 
+        src=/home/ubuntu/ansible/web.php 
         dest=/var/www/myapp/laravel-realworld-example-app/routes/
 
   - name: "Composer  install"
@@ -172,7 +172,7 @@
 
   - name: Create .env file for database
     template: 
-        src=/vagrant/ansible/env.example 
+        src=env.example 
         dest=/var/www/myapp/laravel-realworld-example-app/.env
 
   - name: To Change artisan file permission
