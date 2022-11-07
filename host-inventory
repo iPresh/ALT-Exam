@@ -1,0 +1,7 @@
+[ansible-nodes]
+44.201.162.223 ansible_ssh_user=ubuntu
+
+[ansible-nodes:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=/home/ubuntu/.ssh/proj.pem
+
