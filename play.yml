@@ -134,13 +134,16 @@
     command: bash pgsql.sh
     ignore_errors: true
 
-  - name: create myapp folder
-    command: mkdir /var/www/myapp
-
   - name: clone the laravel app codebase
     git:
        repo: https://github.com/f1amy/laravel-realworld-example-app.git
        dest: /var/www/myapp/laravel-realworld-example-app
+         force=yes
+         accept_hostkey=yes
+
+  - name: copy lavarel repo
+    shell: sudo mv -f /opt/myapp /var/www/html/
+    ignore_errors: true
 
   - name: Permission for composer Installation
     ansible.builtin.file:
@@ -152,10 +155,17 @@
   - name: Remove default web.php from routes
     shell: sudo rm -rf /var/www/myapp/laravel-realworld-example-app/routes/web.php
  
-  - name: Create new web.php in routes
-    template: 
-        src=/home/ubuntu/ansible/web.php 
-        dest=/var/www/myapp/laravel-realworld-example-app/routes/
+  
+  - name: Create the web.php file in the routes directory
+    ansible.builtin.copy:
+         dest: /var/www/myapp/laravel-realworld-example-app/routes/web.php
+         content: |
+           <?php
+ 
+           Route::get('/', function () {
+               return view('welcome');
+           });
+
 
   - name: "Composer  install"
     become: false
@@ -163,6 +173,10 @@
         command: install
         global_command: false
         working_dir: /var/www/myapp/laravel-realworld-example-app/
+    environment:
+        COMPOSER_ALLOW_SUPERUSER: "1"
+        COMPOSER_NO_INTERACTION: "1"
+    ignore_errors: true
 
   - name: Change Permissions
     shell: chown -R www-data:www-data /var/www/myapp/laravel-realworld-example-app/
@@ -172,14 +186,14 @@
 
   - name: Create .env file for database
     template: 
-        src=env.example 
+        src=/home/ubuntu/ansible/laravel.env 
         dest=/var/www/myapp/laravel-realworld-example-app/.env
 
   - name: To Change artisan file permission
     shell: chmod 777 /var/www/myapp/laravel-realworld-example-app/artisan
 
   - name: To generate artisan key
-    shell: php /var/www/myapp/laravel-realworld-example-app/artisan key:generate -y
+    shell: php /var/www/myapp/laravel-realworld-example-app/artisan key:generate 
    
   - name: start mysql service
     service: name=mysql  state=restarted
@@ -196,9 +210,9 @@
   - name: clear cache
     shell: php /var/www/myapp/laravel-realworld-example-app/artisan config:clear
 
-  - name: run migration artisan migrate
-    shell: php /var/www/myapp/laravel-realworld-example-app/artisan migrate
-    ignore_errors:  true
+  #- name: run migration artisan migrate
+   # shell: php /var/www/myapp/laravel-realworld-example-app/artisan migrate
+    #ignore_errors:  true
 
   - name: run migration fresh
     shell: php /var/www/myapp/laravel-realworld-example-app/artisan migrate:fresh
@@ -249,6 +263,12 @@
 
   - name: Restart apache2
     command: systemctl restart apache2
+
+  - name: setup laravel
+    shell: |
+        cd /var/www/myapp/laravel-realworld-example-app/
+        php artisan key:generate
+    become: yes
 
 
   handlers:
