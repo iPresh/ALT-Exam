@@ -137,28 +137,28 @@
   - name: clone the laravel app codebase
     git:
        repo: https://github.com/f1amy/laravel-realworld-example-app.git
-       dest: /var/www/myapp/laravel-realworld-example-app
+       dest: /var/www/html/theapp
          force=yes
          accept_hostkey=yes
 
   - name: copy lavarel repo
-    shell: sudo mv -f /opt/myapp /var/www/html/
+    shell: sudo mv -f /html/myapp /var/www/html/
     ignore_errors: true
 
   - name: Permission for composer Installation
     ansible.builtin.file:
-       path: /var/www/myapp/laravel-realworld-example-app
+       path: /var/www/html/theapp
        owner: ubuntu
        group: ubuntu
        mode: '0777'
 
   - name: Remove default web.php from routes
-    shell: sudo rm -rf /var/www/myapp/laravel-realworld-example-app/routes/web.php
+    shell: sudo rm -rf /var/www/html/theapp/routes/web.php
  
   
   - name: Create the web.php file in the routes directory
     ansible.builtin.copy:
-         dest: /var/www/myapp/laravel-realworld-example-app/routes/web.php
+         dest: /var/www/html/theapp/routes/web.php
          content: |
            <?php
  
@@ -172,28 +172,28 @@
     composer:
         command: install
         global_command: false
-        working_dir: /var/www/myapp/laravel-realworld-example-app/
+        working_dir: /var/www/html/theapp
     environment:
         COMPOSER_ALLOW_SUPERUSER: "1"
         COMPOSER_NO_INTERACTION: "1"
     ignore_errors: true
 
   - name: Change Permissions
-    shell: chown -R www-data:www-data /var/www/myapp/laravel-realworld-example-app/
+    shell: chown -R www-data:www-data /var/www/html/theapp/
 
   - name: Change permissions for storage
-    shell: chmod -R 775 /var/www/myapp/laravel-realworld-example-app/storage
+    shell: chmod -R 775 /var/www/html/theapp/storage
 
   - name: Create .env file for database
     template: 
         src=/home/ubuntu/ansible/laravel.env 
-        dest=/var/www/myapp/laravel-realworld-example-app/.env
+        dest=/var/www/html/theapp/.env
 
   - name: To Change artisan file permission
-    shell: chmod 777 /var/www/myapp/laravel-realworld-example-app/artisan
+    shell: chmod 777 /var/www/html/theapp/artisan
 
   - name: To generate artisan key
-    shell: php /var/www/myapp/laravel-realworld-example-app/artisan key:generate 
+    shell: php /var/www/html/theapp/artisan key:generate 
    
   - name: start mysql service
     service: name=mysql  state=restarted
@@ -208,22 +208,22 @@
     shell: apt update && sudo apt upgrade -y
 
   - name: clear cache
-    shell: php /var/www/myapp/laravel-realworld-example-app/artisan config:clear
+    shell: php /var/www/html/theapp/artisan config:clear
 
-  #- name: run migration artisan migrate
-   # shell: php /var/www/myapp/laravel-realworld-example-app/artisan migrate
-    #ignore_errors:  true
+  - name: run migration artisan migrate
+    shell: php /var/www/html/theapp/artisan migrate
+    ignore_errors:  true
 
   - name: run migration fresh
-    shell: php /var/www/myapp/laravel-realworld-example-app/artisan migrate:fresh
+    shell: php /var/www/html/theapp/artisan migrate:fresh
     ignore_errors: true
 
   - name: run migration seed
-    shell: php /var/www/myapp/laravel-realworld-example-app/artisan migrate --seed
+    shell: php /var/www/html/theapp/artisan migrate --seed
     ignore_errors: true
 
   - name: run migration refresh
-    shell: php /var/www/myapp/laravel-realworld-example-app/artisan migrate:refresh --seed
+    shell: php /var/www/html/theapp/artisan migrate:refresh --seed
     ignore_errors: true
 
   - name: Remove default apache page
@@ -231,14 +231,14 @@
 
   - name: Create an apache virtual host configuration file
     ansible.builtin.copy:
-       dest: /etc/apache2/sites-available/laravel.conf
+       dest: /etc/apache2/sites-available/rendered.conf
        content: |
            <VirtualHost *:80>
                ServerAdmin admin@44.201.162.223
                ServerName 44.201.162.223
-               DocumentRoot /var/www/myapp/public
+               DocumentRoot /var/www/theapp/public
      
-               <Directory /var/www/myapp/public>
+               <Directory /var/www/theapp/public>
                    AllowOverride All
                </Directory>
      
@@ -247,7 +247,7 @@
            </VirtualHost>   
 
   - name: permission for laravel conf file
-    shell: chmod -R 777 /etc/apache2/sites-available/laravel.conf
+    shell: chmod -R 777 /etc/apache2/sites-available/rendered.conf
 
   - name: Disable default Apache2 configuration
     command: /etc/apache2/sites-available/000-default.conf a2dissite
@@ -256,7 +256,7 @@
     command: rm -rf /etc/apache2/sites-available/000-default.conf
 
   - name: Enable Laravel Host configuration
-    command: a2ensite laravel.conf
+    command: a2ensite rendered.conf
 
   - name: Enable the Apache rewrite module
     command:  a2enmod rewrite
@@ -264,11 +264,7 @@
   - name: Restart apache2
     command: systemctl restart apache2
 
-  - name: setup laravel
-    shell: |
-        cd /var/www/myapp/laravel-realworld-example-app/
-        php artisan key:generate
-    become: yes
+  
 
 
   handlers:
